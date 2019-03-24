@@ -4,7 +4,7 @@
  */
 
 
-#include "S32K144.h" /* include peripheral declarations S32K144 */
+#include "S32K144.h"
 
 int main(void)
 {
