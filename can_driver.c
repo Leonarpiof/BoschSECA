@@ -29,6 +29,11 @@
 #define PARAM_OK				(0)
 #define PARAM_NOT_OK			(1)
 
+#define CLEAR_MB_0				(0x00000001)
+#define STD_ID_MASK				(0x000007FF)
+
+#define TX_BUFF_TRANSMITT		(0x0C400000)
+
 return_codes_t CAN_Init(CAN_init_t config)
 {
 	/** Coutner to clean the RAM*/
@@ -151,6 +156,63 @@ return_codes_t CAN_Init(CAN_init_t config)
 		while ((CAN1->MCR && CAN_MCR_FRZACK_MASK) >> CAN_MCR_FRZACK_SHIFT);
 		/** Waits for the module to be ready*/
 		while ((CAN1->MCR && CAN_MCR_NOTRDY_MASK) >> CAN_MCR_NOTRDY_SHIFT);
+	}
+
+	else
+	{
+		retval = CAN_parameter_error;
+	}
+
+	return retval;
+}
+
+return_codes_t CAN_send_message(CAN_alternative_t alt, uint16_t ID, uint32_t* msg, uint8_t msg_size)
+{
+	return_codes_t retval = CAN_success;
+	uint8_t counter = 0;
+	uint8_t DLC = 0;
+
+	/** ID can only be of 11 bits*/
+	ID &= STD_ID_MASK;
+	/** Sets the DLC*/
+	DLC = msg_size / 4;
+
+	if(CAN_0 == alt)
+	{
+		/** Clears CAN 0 MB 0 interruption flag*/
+		CAN0->IFLAG1 = CLEAR_MB_0;
+
+		/** Sets the message in the CAN tx buffer*/
+		for(counter = 0 ; counter < msg_size ; counter ++)
+		{
+			CAN0->RAMn[2 + counter] = (*msg);
+			msg ++;
+		}
+
+		/** Sets the ID to the bits 28-18 (ID bits for standard format)*/
+		CAN0->RAMn[1] = (ID << 16);
+
+		/** Sets the CAN command to transmitt*/
+		CAN0->RAMn[0] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
+	}
+
+	else if(CAN_1 == alt)
+	{
+		/** Clears CAN 0 MB 0 interruption flag*/
+		CAN1->IFLAG1 = CLEAR_MB_0;
+
+		/** Sets the message in the CAN tx buffer*/
+		for(counter = 0 ; counter < msg_size ; counter ++)
+		{
+			CAN1->RAMn[2 + counter] = (*msg);
+			msg ++;
+		}
+
+		/** Sets the ID to the bits 28-18 (ID bits for standard format)*/
+		CAN1->RAMn[1] = (ID << 16);
+
+		/** Sets the CAN command to transmitt*/
+		CAN1->RAMn[0] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
 	}
 
 	else

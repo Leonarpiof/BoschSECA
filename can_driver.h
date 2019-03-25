@@ -49,4 +49,6 @@ typedef struct
 
 return_codes_t CAN_Init(CAN_init_t config);
 
+return_codes_t CAN_send_message(CAN_alternative_t alt, uint16_t ID, uint32_t* msg, uint8_t msg_size);
+
 #endif /* CAN_DRIVER_H_ */
