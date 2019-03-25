@@ -33,6 +33,18 @@
 
 #define TX_BUFF_TRANSMITT		(0x0C400000)
 
+#define CAN_CODE_MASK			(0x07000000)
+#define CAN_CODE_SHIFT			(24)
+
+#define CAN_TIMESTAMP_MASK		(0x0000FFFF)
+#define CLEAR_MB_4				(0x00000010)
+
+static uint32_t RxCODE;
+static uint32_t RxID;
+static uint32_t RxLENGTH;
+static uint32_t RxDATA[16];
+static uint32_t RxTIMESTAMP;
+
 void CAN_Init(CAN_Type* base, CAN_speed_t speed)
 {
 	/** Coutner to clean the RAM*/
@@ -108,19 +120,43 @@ void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_si
 	/** Sets the DLC*/
 	DLC = msg_size / 4;
 
-		/** Clears CAN 0 MB 0 interruption flag*/
-		base->IFLAG1 = CLEAR_MB_0;
+	/** Clears CAN 0 MB 0 interruption flag*/
+	base->IFLAG1 = CLEAR_MB_0;
 
-		/** Sets the message in the CAN tx buffer*/
-		for(counter = 0 ; counter < msg_size ; counter ++)
-		{
-			base->RAMn[2 + counter] = (*msg);
-			msg ++;
-		}
+	/** Sets the message in the CAN tx buffer*/
+	for(counter = 0 ; counter < msg_size ; counter ++)
+	{
+		base->RAMn[2 + counter] = (*msg);
+		msg ++;
+	}
 
-		/** Sets the ID to the bits 28-18 (ID bits for standard format)*/
-		base->RAMn[1] = (ID << 16);
+	/** Sets the ID to the bits 28-18 (ID bits for standard format)*/
+	base->RAMn[1] = (ID << 16);
 
-		/** Sets the CAN command to transmitt*/
-		base->RAMn[0] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
+	/** Sets the CAN command to transmitt*/
+	base->RAMn[0] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
+}
+
+void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* msg_size, uint16_t* timestamp)
+{
+	uint8_t counter = 0;
+
+	RxCODE = (base->RAMn[16] & CAN_CODE_MASK) >> CAN_CODE_SHIFT;
+	RxID = (base->RAMn[17] & CAN_WMBn_ID_ID_MASK) >> CAN_WMBn_ID_ID_SHIFT;
+	RxLENGTH = (base->RAMn[16] & CAN_WMBn_CS_DLC_MASK) >> CAN_WMBn_CS_DLC_SHIFT;
+
+	for(counter = 0 ; counter < RxLENGTH ; counter ++)
+	{
+		RxDATA[counter] = base->RAMn[18 + counter];
+		(*msg) = RxDATA[counter];
+		msg ++;
+	}
+
+	RxTIMESTAMP = (base->RAMn[0] & CAN_TIMESTAMP_MASK);
+
+	base->IFLAG1 = CLEAR_MB_4;
+
+	(*ID) = RxID;
+	(*msg_size) = RxLENGTH;
+	(*timestamp) = RxTIMESTAMP;
 }
