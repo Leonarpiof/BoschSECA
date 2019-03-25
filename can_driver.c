@@ -14,7 +14,6 @@
  */
 
 #include "can_driver.h"
-#include "S32K144.h"
 
 #define INIT_VAL				(0)
 #define MAX_MSG_BUFFERS			(128)
@@ -34,141 +33,73 @@
 
 #define TX_BUFF_TRANSMITT		(0x0C400000)
 
-return_codes_t CAN_Init(CAN_init_t config)
+void CAN_Init(CAN_Type* base, CAN_speed_t speed)
 {
 	/** Coutner to clean the RAM*/
 	uint8_t counter;
-	uint8_t param_ok = PARAM_OK;
 
-	/** Default return value*/
-	return_codes_t retval = CAN_success;
-
-	if(config.speed != speed_50kbps ||
-			config.speed != speed_100kbps ||
-			config.speed != speed_250kbps ||
-			config.speed != speed_500kbps)
-	{
-		param_ok = PARAM_NOT_OK;
-	}
-
-
-	if(CAN_0 == config.alternative && PARAM_OK == param_ok)
+	if(CAN0 == base)
 	{
 		/** Enables the peripheral clock*/
 		PCC->PCCn[PCC_FlexCAN0_INDEX] |= PCC_PCCn_CGC_MASK;
-
-		/** Disables the Clock*/
-		CAN0->MCR |= CAN_MCR_MDIS_MASK;
-		/** Sets the clock source to the oscillator clock*/
-		//TODO: Funciona con peripheral clock?
-		CAN0->CTRL1 &= (~CAN_CTRL1_CLKSRC_MASK);
-		/** Enables the module*/
-		CAN0->MCR &= (~CAN_MCR_MDIS_MASK);
-
-		/** Waits for the module to enter freeze mode*/
-		while(!((CAN0->MCR & CAN_MCR_FRZACK_MASK) >> CAN_MCR_FRZACK_SHIFT));
-
-		//TODO: Probar todas las velocidades
-		/** Configures the speed, and other parameters*/
-		CAN0->CTRL1 |= config.speed;
-
-		for(counter = INIT_VAL ; MAX_MSG_BUFFERS > counter ; counter ++)
-		{
-			CAN0->RAMn[counter] = INIT_VAL;
-
-			if(MAX_FILTER_BUFFERS > counter)
-			{
-				CAN0->RXIMR[counter] = CHECK_ALL_MESSAGES;
-			}
-		}
-
-		CAN0->RXMGMASK = GLOBAL_ACCEPTANCE_MASK;
-
-		//TODO: ¿Debe estar esto aqui?¿Cómo configurar los buffers de recepción de manera más dinámica?
-		/************************************************************************************************/
-		CAN0->RAMn[ 4*MSG_BUF_SIZE + 0] = ENABLE_RX_BUFF; /* Msg Buf 4, word 0: Enable for reception */
-
-
-	#ifdef NODE_A                                   /* Node A receives msg with std ID 0x511 */
-		CAN0->RAMn[ 4*MSG_BUF_SIZE + 1] = 0x14440000; /* Msg Buf 4, word 1: Standard ID = 0x111 */
-	#else                                           /* Node B to receive msg with std ID 0x555 */
-		CAN0->RAMn[ 4*MSG_BUF_SIZE + 1] = 0x15540000; /* Msg Buf 4, word 1: Standard ID = 0x555 */
-	#endif
-		/***********************************************************************************************/
-
-		/** CAN FD not used*/
-		CAN0->MCR |= 0x0000001F;       /* Negate FlexCAN 1 halt state for 32 MBs */
-
-		/** Waits for the module to exit freeze mode*/
-		while ((CAN0->MCR && CAN_MCR_FRZACK_MASK) >> CAN_MCR_FRZACK_SHIFT);
-		/** Waits for the module to be ready*/
-		while ((CAN0->MCR && CAN_MCR_NOTRDY_MASK) >> CAN_MCR_NOTRDY_SHIFT);
 	}
 
-	else if(CAN_1 == config.alternative && PARAM_OK == param_ok)
+	else if(CAN1 == base)
 	{
 		/** Enables the peripheral clock*/
 		PCC->PCCn[PCC_FlexCAN1_INDEX] |= PCC_PCCn_CGC_MASK;
-
-		/** Disables the module*/
-		CAN1->MCR |= CAN_MCR_MDIS_MASK;
-		/** Sets the clock source to the oscillator clock*/
-		//TODO: Funciona con peripheral clock?
-		CAN1->CTRL1 &= (~CAN_CTRL1_CLKSRC_MASK);
-		/** Enables the module*/
-		CAN1->MCR &= (~CAN_MCR_MDIS_MASK);
-
-		/** Waits for the module to enter freeze mode*/
-		while(!((CAN1->MCR & CAN_MCR_FRZACK_MASK) >> CAN_MCR_FRZACK_SHIFT));
-
-		//TODO: Probar todas las velocidades
-		/** Configures the speed, and other parameters*/
-		CAN1->CTRL1 |= config.speed;
-
-		for(counter = INIT_VAL ; MAX_MSG_BUFFERS > counter ; counter ++)
-		{
-			CAN1->RAMn[counter] = INIT_VAL;
-
-			if(MAX_FILTER_BUFFERS > counter)
-			{
-				CAN1->RXIMR[counter] = CHECK_ALL_MESSAGES;
-			}
-		}
-
-		CAN1->RXMGMASK = GLOBAL_ACCEPTANCE_MASK;
-
-		//TODO: ¿Debe estar esto aqui?¿Cómo configurar los buffers de recepción de manera más dinámica?
-		/************************************************************************************************/
-		CAN1->RAMn[ 4*MSG_BUF_SIZE + 0] = ENABLE_RX_BUFF; /* Msg Buf 4, word 0: Enable for reception */
-
-
-	#ifdef NODE_A                                   /* Node A receives msg with std ID 0x511 */
-		CAN1->RAMn[ 4*MSG_BUF_SIZE + 1] = 0x14440000; /* Msg Buf 4, word 1: Standard ID = 0x111 */
-	#else                                           /* Node B to receive msg with std ID 0x555 */
-		CAN1->RAMn[ 4*MSG_BUF_SIZE + 1] = 0x15540000; /* Msg Buf 4, word 1: Standard ID = 0x555 */
-	#endif
-		/***********************************************************************************************/
-
-		/** CAN FD not used*/
-		CAN1->MCR |= 0x0000001F;       /* Negate FlexCAN 1 halt state for 32 MBs */
-
-		/** Waits for the module to exit freeze mode*/
-		while ((CAN1->MCR && CAN_MCR_FRZACK_MASK) >> CAN_MCR_FRZACK_SHIFT);
-		/** Waits for the module to be ready*/
-		while ((CAN1->MCR && CAN_MCR_NOTRDY_MASK) >> CAN_MCR_NOTRDY_SHIFT);
 	}
 
-	else
+	/** Disables the Clock*/
+	base->MCR |= CAN_MCR_MDIS_MASK;
+	/** Sets the clock source to the oscillator clock*/
+	//TODO: Funciona con peripheral clock?
+	base->CTRL1 &= (~CAN_CTRL1_CLKSRC_MASK);
+	/** Enables the module*/
+	base->MCR &= (~CAN_MCR_MDIS_MASK);
+
+	/** Waits for the module to enter freeze mode*/
+	while(!((base->MCR & CAN_MCR_FRZACK_MASK) >> CAN_MCR_FRZACK_SHIFT));
+
+	//TODO: Probar todas las velocidades
+	/** Configures the speed, and other parameters*/
+	base->CTRL1 |= speed;
+
+	for(counter = INIT_VAL ; MAX_MSG_BUFFERS > counter ; counter ++)
 	{
-		retval = CAN_parameter_error;
+		base->RAMn[counter] = INIT_VAL;
+
+		if(MAX_FILTER_BUFFERS > counter)
+		{
+			base->RXIMR[counter] = CHECK_ALL_MESSAGES;
+		}
 	}
 
-	return retval;
+	CAN0->RXMGMASK = GLOBAL_ACCEPTANCE_MASK;
+
+	//base: ¿Debe estar esto aqui?¿Cómo configurar los buffers de recepción de manera más dinámica?
+	/************************************************************************************************/
+	base->RAMn[ 4*MSG_BUF_SIZE + 0] = ENABLE_RX_BUFF; /* Msg Buf 4, word 0: Enable for reception */
+
+
+#ifdef NODE_A                                   /* Node A receives msg with std ID 0x511 */
+	base->RAMn[ 4*MSG_BUF_SIZE + 1] = 0x14440000; /* Msg Buf 4, word 1: Standard ID = 0x111 */
+#else                                           /* Node B to receive msg with std ID 0x555 */
+	base->RAMn[ 4*MSG_BUF_SIZE + 1] = 0x15540000; /* Msg Buf 4, word 1: Standard ID = 0x555 */
+#endif
+	/***********************************************************************************************/
+
+	/** CAN FD not used*/
+	base->MCR |= 0x0000001F;       /* Negate FlexCAN 1 halt state for 32 MBs */
+
+	/** Waits for the module to exit freeze mode*/
+	while ((base->MCR && CAN_MCR_FRZACK_MASK) >> CAN_MCR_FRZACK_SHIFT);
+	/** Waits for the module to be ready*/
+	while ((base->MCR && CAN_MCR_NOTRDY_MASK) >> CAN_MCR_NOTRDY_SHIFT);
 }
 
-return_codes_t CAN_send_message(CAN_alternative_t alt, uint16_t ID, uint32_t* msg, uint8_t msg_size)
+void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_size)
 {
-	return_codes_t retval = CAN_success;
 	uint8_t counter = 0;
 	uint8_t DLC = 0;
 
@@ -177,48 +108,19 @@ return_codes_t CAN_send_message(CAN_alternative_t alt, uint16_t ID, uint32_t* ms
 	/** Sets the DLC*/
 	DLC = msg_size / 4;
 
-	if(CAN_0 == alt)
-	{
 		/** Clears CAN 0 MB 0 interruption flag*/
-		CAN0->IFLAG1 = CLEAR_MB_0;
+		base->IFLAG1 = CLEAR_MB_0;
 
 		/** Sets the message in the CAN tx buffer*/
 		for(counter = 0 ; counter < msg_size ; counter ++)
 		{
-			CAN0->RAMn[2 + counter] = (*msg);
+			base->RAMn[2 + counter] = (*msg);
 			msg ++;
 		}
 
 		/** Sets the ID to the bits 28-18 (ID bits for standard format)*/
-		CAN0->RAMn[1] = (ID << 16);
+		base->RAMn[1] = (ID << 16);
 
 		/** Sets the CAN command to transmitt*/
-		CAN0->RAMn[0] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
-	}
-
-	else if(CAN_1 == alt)
-	{
-		/** Clears CAN 0 MB 0 interruption flag*/
-		CAN1->IFLAG1 = CLEAR_MB_0;
-
-		/** Sets the message in the CAN tx buffer*/
-		for(counter = 0 ; counter < msg_size ; counter ++)
-		{
-			CAN1->RAMn[2 + counter] = (*msg);
-			msg ++;
-		}
-
-		/** Sets the ID to the bits 28-18 (ID bits for standard format)*/
-		CAN1->RAMn[1] = (ID << 16);
-
-		/** Sets the CAN command to transmitt*/
-		CAN1->RAMn[0] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
-	}
-
-	else
-	{
-		retval = CAN_parameter_error;
-	}
-
-	return retval;
+		base->RAMn[0] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
 }

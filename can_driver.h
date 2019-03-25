@@ -16,22 +16,12 @@
 #ifndef CAN_DRIVER_H_
 #define CAN_DRIVER_H_
 
+#include "S32K144.h"
+
 #define CAN_CTRL1_SPEED_500KBPS			(0x00DB0006)
 #define CAN_CTRL1_SPEED_250KBPS			(0x01DB0006)
 #define CAN_CTRL1_SPEED_100KBPS			(0x04DB0006)
 #define CAN_CTRL1_SPEED_50KBPS			(0x09DB0006)
-
-typedef enum
-{
-	CAN_success,
-	CAN_parameter_error
-}return_codes_t;
-
-typedef enum
-{
-	CAN_0,
-	CAN_1
-}CAN_alternative_t;
 
 typedef enum
 {
@@ -41,14 +31,8 @@ typedef enum
 	speed_50kbps = CAN_CTRL1_SPEED_50KBPS,
 }CAN_speed_t;
 
-typedef struct
-{
-	CAN_alternative_t alternative;
-	CAN_speed_t speed;
-}CAN_init_t;
+void CAN_Init(CAN_Type* base, CAN_speed_t speed);
 
-return_codes_t CAN_Init(CAN_init_t config);
-
-return_codes_t CAN_send_message(CAN_alternative_t alt, uint16_t ID, uint32_t* msg, uint8_t msg_size);
+void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_size);
 
 #endif /* CAN_DRIVER_H_ */
