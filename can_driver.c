@@ -91,10 +91,10 @@ void CAN_Init(CAN_Type* base, CAN_speed_t speed)
 
 	CAN0->RXMGMASK = GLOBAL_ACCEPTANCE_MASK;
 
-	//base: ¿Debe estar esto aqui?¿Cómo configurar los buffers de recepción de manera más dinámica?
+	//TODO: ¿Debe estar esto aqui?¿Cómo configurar los buffers de recepción de manera más dinámica?
+	//TODO: ¿Es posible configurar "Cualquier ID" y revisar el ID fuera de la función?
 	/************************************************************************************************/
 	base->RAMn[ 4*MSG_BUF_SIZE + 0] = ENABLE_RX_BUFF; /* Msg Buf 4, word 0: Enable for reception */
-
 
 #ifdef NODE_A                                   /* Node A receives msg with std ID 0x511 */
 	base->RAMn[ 4*MSG_BUF_SIZE + 1] = 0x14440000; /* Msg Buf 4, word 1: Standard ID = 0x111 */
@@ -141,33 +141,43 @@ void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_si
 
 void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* msg_size, uint16_t* timestamp)
 {
-	uint8_t counter = 0;
+	uint8_t counter = INIT_VAL;
 
+	/** Gets the rx code*/
 	RxCODE = (base->RAMn[16] & CAN_CODE_MASK) >> CAN_CODE_SHIFT;
+	/** Gets ID*/
 	RxID = (base->RAMn[17] & CAN_WMBn_ID_ID_MASK) >> CAN_WMBn_ID_ID_SHIFT;
+	/** Gets the DLC*/
 	RxLENGTH = (base->RAMn[16] & CAN_WMBn_CS_DLC_MASK) >> CAN_WMBn_CS_DLC_SHIFT;
 
-	for(counter = 0 ; counter < RxLENGTH ; counter ++)
+	/** Gets each of the data*/
+	for(counter = INIT_VAL ; counter < RxLENGTH ; counter ++)
 	{
 		RxDATA[counter] = base->RAMn[18 + counter];
+		/** Sets the data to the msg pointer*/
 		(*msg) = RxDATA[counter];
 		msg ++;
 	}
 
+	/** Gets the time stamp*/
 	RxTIMESTAMP = (base->RAMn[0] & CAN_TIMESTAMP_MASK);
 
+	/** Clears the reception flag*/
 	base->IFLAG1 = CLEAR_MB_4;
 
+	/** Returns the data*/
 	(*ID) = RxID;
 	(*msg_size) = RxLENGTH;
 	(*timestamp) = RxTIMESTAMP;
 }
 
+/** Gets the flag of the RX buffer*/
 CAN_rx_status_t CAN_get_rx_status(CAN_Type* base)
 {
 	return ((CAN_rx_status_t)((base->IFLAG1 >> 4) & BIT_MASK));
 }
 
+/** Gets the flag of the RX buffer*/
 CAN_tx_status_t CAN_get_tx_status(CAN_Type* base)
 {
 	return((CAN_tx_status_t)(base->IFLAG1 & BIT_MASK));
