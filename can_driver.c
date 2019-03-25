@@ -39,6 +39,8 @@
 #define CAN_TIMESTAMP_MASK		(0x0000FFFF)
 #define CLEAR_MB_4				(0x00000010)
 
+#define BIT_MASK				(1)
+
 static uint32_t RxCODE;
 static uint32_t RxID;
 static uint32_t RxLENGTH;
@@ -159,4 +161,9 @@ void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* m
 	(*ID) = RxID;
 	(*msg_size) = RxLENGTH;
 	(*timestamp) = RxTIMESTAMP;
+}
+
+CAN_rx_status_t CAN_get_rx_status(CAN_Type* base)
+{
+	return ((CAN_rx_status_t)((base->IFLAG1 >> 4) & BIT_MASK));
 }

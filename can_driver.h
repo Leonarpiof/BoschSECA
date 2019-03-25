@@ -31,10 +31,24 @@ typedef enum
 	speed_50kbps = CAN_CTRL1_SPEED_50KBPS,
 }CAN_speed_t;
 
+typedef enum
+{
+	rx_not_interrupted,
+	rx_interrupted
+}CAN_rx_status_t;
+
+typedef enum
+{
+	tx_not_interrupted,
+	tx_interrupted
+}CAN_tx_status_t;
+
 void CAN_Init(CAN_Type* base, CAN_speed_t speed);
 
 void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_size);
 
 void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* msg_size, uint16_t* timestamp);
+
+CAN_rx_status_t CAN_get_rx_status(CAN_Type* base);
 
 #endif /* CAN_DRIVER_H_ */
