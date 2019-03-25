@@ -167,3 +167,8 @@ CAN_rx_status_t CAN_get_rx_status(CAN_Type* base)
 {
 	return ((CAN_rx_status_t)((base->IFLAG1 >> 4) & BIT_MASK));
 }
+
+CAN_tx_status_t CAN_get_tx_status(CAN_Type* base)
+{
+	return((CAN_tx_status_t)(base->IFLAG1 & BIT_MASK));
+}

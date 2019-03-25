@@ -51,4 +51,6 @@ void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* m
 
 CAN_rx_status_t CAN_get_rx_status(CAN_Type* base);
 
+CAN_tx_status_t CAN_get_tx_status(CAN_Type* base);
+
 #endif /* CAN_DRIVER_H_ */
