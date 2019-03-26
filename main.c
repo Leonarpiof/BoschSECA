@@ -44,11 +44,20 @@ int main(void)
 
 	while(1)
 	{
+		/** Waits for the CAN to receive*/
 		if(CAN_get_rx_status(CAN0))
 		{
+			/** Gets the message*/
 			CAN_receive_message(CAN0, &ID, msg, &msg_size, &DLC);
 
+			/** Sends the message with another ID*/
 			CAN_send_message(CAN0, ID + 1, msg, msg_size, DLC);
+
+			/** Waits for the CAN to finish the transmission*/
+			while(!CAN_get_tx_status(CAN0));
+
+			/** Clears the flags*/
+			CAN_clear_tx_and_rx_flags(CAN0);
 		}
 	}
 

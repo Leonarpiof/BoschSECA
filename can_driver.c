@@ -177,8 +177,10 @@ void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_si
 	/** Sets the DLC and the CAN command to transmit*/
 	base->RAMn[(TX_BUFF_OFFSET * MSG_BUF_SIZE) + CODE_AND_DLC_POS] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
 
+	/** Waits for the CAN to finish the transmission*/
 	while(!CAN_get_tx_status(CAN0));
 
+	/** Clears the flags*/
 	CAN_clear_tx_and_rx_flags(CAN0);
 }
 
