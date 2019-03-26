@@ -133,10 +133,6 @@ void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_si
 
 	/** Sets the CAN command to transmit*/
 	base->RAMn[0] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
-
-	while(!CAN_get_tx_status(base));
-
-	CAN_clear_tx_and_rx_flags(base);
 }
 
 void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* msg_size, uint16_t* timestamp, uint8_t* DLC)
