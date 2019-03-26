@@ -49,6 +49,8 @@ int main(void)
 		{
 			CAN_receive_message(CAN0, &ID, msg, &msg_size, &timestamp, &DLC);
 
+
+
 			CAN_send_message(CAN0, ID + 1, msg, msg_size, DLC);
 		}
 	}

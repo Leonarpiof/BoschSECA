@@ -45,6 +45,8 @@
 
 #define RX_ID_SHIFT				(18)
 
+#define CLEAR_ALL_FLAGS			(0xFFFFFFFF)
+
 static uint32_t RxCODE;
 static uint32_t RxID;
 static uint32_t RxLENGTH;
@@ -92,23 +94,13 @@ void CAN_Init(CAN_Type* base, CAN_speed_t speed)
 
 		if(MAX_FILTER_BUFFERS > counter)
 		{
-			base->RXIMR[counter] = CHECK_ALL_MESSAGES;
+			base->RXIMR[counter] = NOT_CHECK_ANY_ID;
 		}
 	}
 
-	CAN0->RXMGMASK = GLOBAL_ACCEPTANCE_MASK;
+	CAN0->RXMGMASK = NOT_CHECK_ANY_ID;
 
-	//TODO: ¿Debe estar esto aqui?¿Cómo configurar los buffers de recepción de manera más dinámica?
-	//TODO: ¿Es posible configurar "Cualquier ID" y revisar el ID fuera de la función?
-	/************************************************************************************************/
 	base->RAMn[ 4*MSG_BUF_SIZE + 0] = ENABLE_RX_BUFF; /* Msg Buf 4, word 0: Enable for reception */
-
-#ifdef NODE_A                                   /* Node A receives msg with std ID 0x511 */
-	base->RAMn[ 4*MSG_BUF_SIZE + 1] = 0x14440000; /* Msg Buf 4, word 1: Standard ID = 0x111 */
-#else                                           /* Node B to receive msg with std ID 0x555 */
-	base->RAMn[ 4*MSG_BUF_SIZE + 1] = 0x15540000; /* Msg Buf 4, word 1: Standard ID = 0x555 */
-#endif
-	/***********************************************************************************************/
 
 	/** CAN FD not used*/
 	base->MCR = 0x0000001F;       /* Negate FlexCAN halt state for 32 MBs */
@@ -141,6 +133,10 @@ void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_si
 
 	/** Sets the CAN command to transmit*/
 	base->RAMn[0] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
+
+	while(!CAN_get_tx_status(base));
+
+	CAN_clear_tx_and_rx_flags(base);
 }
 
 void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* msg_size, uint16_t* timestamp, uint8_t* DLC)
@@ -187,4 +183,9 @@ CAN_rx_status_t CAN_get_rx_status(CAN_Type* base)
 CAN_tx_status_t CAN_get_tx_status(CAN_Type* base)
 {
 	return((CAN_tx_status_t)(base->IFLAG1 & BIT_MASK));
+}
+
+void CAN_clear_tx_and_rx_flags(CAN_Type* base)
+{
+	base->IFLAG1 = CLEAR_ALL_FLAGS;
 }
