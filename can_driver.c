@@ -53,9 +53,9 @@ static uint32_t RxLENGTH;
 static uint32_t RxDATA[16];
 static uint32_t RxTIMESTAMP;
 
-void CAN_Init(CAN_Type* base, CAN_speed_t speed)
+void CAN_Init(CAN_Type* base, uint32_t speed)
 {
-	/** Coutner to clean the RAM*/
+	/** Counter to clean the RAM*/
 	uint8_t counter;
 
 	if(CAN0 == base)

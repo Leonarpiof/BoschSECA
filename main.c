@@ -31,7 +31,7 @@ int main(void)
 	NormalRUNmode_80MHz();  /* Init clocks: 80 MHz sysclk & core, 40 MHz bus, 20 MHz flash */
 	/** To here **********************************************************************************************/
 
-	CAN_Init(CAN0, speed_500kbps);
+	CAN_Init(CAN0, CAN_CTRL1_SPEED_500KBPS);
 
 	/*********************** NOTE ***************************/
 	/** This module is taken from the driver example FlexCAN*/
