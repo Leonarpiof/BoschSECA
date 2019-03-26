@@ -81,12 +81,11 @@ void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_si
  	 \param[out] ID ID of the message received.
  	 \param[out] msg Message received.
  	 \param[out] msg_size Length of msg.
- 	 \param[out] timestamp Time at which the message was received.
  	 \param[out] DLC Length of the received message in bytes.
 
  	 \return void.
  */
-void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* msg_size, uint16_t* timestamp, uint8_t* DLC);
+void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* msg_size, uint8_t* DLC);
 
 /*!
  	 \brief This function gets the status of the Rx message buffer.

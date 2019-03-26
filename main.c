@@ -17,7 +17,6 @@ int main(void)
 	uint16_t ID;
 	uint32_t msg[16];
 	uint8_t msg_size;
-	uint16_t timestamp;
 	uint8_t DLC;
 	WDOG_disable();
 
@@ -47,13 +46,9 @@ int main(void)
 	{
 		if(CAN_get_rx_status(CAN0))
 		{
-			CAN_receive_message(CAN0, &ID, msg, &msg_size, &timestamp, &DLC);
+			CAN_receive_message(CAN0, &ID, msg, &msg_size, &DLC);
 
-			//CAN_send_message(CAN0, ID + 1, msg, msg_size, DLC);
-
-			//while(!CAN_get_tx_status(CAN0));
-
-			//CAN_clear_tx_and_rx_flags(CAN0);
+			CAN_send_message(CAN0, ID + 1, msg, msg_size, DLC);
 		}
 	}
 

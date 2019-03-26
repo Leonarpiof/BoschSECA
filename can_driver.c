@@ -74,6 +74,9 @@
 /** Defines the shifts for the Rx MB interruption flag*/
 #define RX_MB_FLAG_SHIFT		(0x04)
 
+#define CAN_FD_DISABLE			(0x0000001F)
+#define MESSAGE_SIZE_OFF		(0x03)
+
 /** Variable to store the code of the Rx MB*/
 static uint32_t RxCODE;
 /** Variable to store the ID of the Rx MB*/
@@ -82,8 +85,6 @@ static uint32_t RxID;
 static uint32_t RxLENGTH;
 /** Variable to store the data of the Rx MB*/
 static uint32_t RxDATA[DATA_SIZE];
-/** Variable to store the timestamp of the Rx MB*/
-static uint32_t RxTIMESTAMP;
 
 /** This function initializes the CAN*/
 void CAN_Init(CAN_Type* base, uint32_t speed)
@@ -143,7 +144,7 @@ void CAN_Init(CAN_Type* base, uint32_t speed)
 	base->RAMn[(RX_BUFF_OFFSET * MSG_BUF_SIZE) + CODE_AND_DLC_POS] = ENABLE_RX_BUFF;
 
 	/** CAN FD not used*/
-	base->MCR = 0x0000001F;
+	base->MCR = CAN_FD_DISABLE;
 
 	/** Waits for the module to exit freeze mode*/
 	while ((base->MCR && CAN_MCR_FRZACK_MASK) >> CAN_MCR_FRZACK_SHIFT);
@@ -175,10 +176,14 @@ void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_si
 
 	/** Sets the DLC and the CAN command to transmit*/
 	base->RAMn[(TX_BUFF_OFFSET * MSG_BUF_SIZE) + CODE_AND_DLC_POS] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
+
+	while(!CAN_get_tx_status(CAN0));
+
+	CAN_clear_tx_and_rx_flags(CAN0);
 }
 
 /** This function receives a message from CAN*/
-void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* msg_size, uint16_t* timestamp, uint8_t* DLC)
+void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* msg_size, uint8_t* DLC)
 {
 	/** Counter to get the message*/
 	uint8_t counter = INIT_VAL;
@@ -200,18 +205,14 @@ void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* m
 		msg ++;
 	}
 
-	/** Gets the time stamp*/
-	RxTIMESTAMP = (base->RAMn[(RX_BUFF_OFFSET * MSG_BUF_SIZE) + CODE_AND_DLC_POS] & CAN_TIMESTAMP_MASK);
-
 	/** Clears the reception flag*/
 	base->IFLAG1 = CLEAR_MB_4;
 
 	/** Returns the data*/
 	(*ID) = (uint16_t)RxID;
 	/** Sets the message size*/
-	(*msg_size) = (uint8_t)(RxLENGTH / DLC_TO_MSG_SIZE_DIV);
+	(*msg_size) = (uint8_t)((RxLENGTH + MESSAGE_SIZE_OFF) / DLC_TO_MSG_SIZE_DIV);
 	(*DLC) = (uint8_t)(RxLENGTH);
-	(*timestamp) = (uint16_t)RxTIMESTAMP;
 }
 
 /** Gets the flag of the RX buffer*/
