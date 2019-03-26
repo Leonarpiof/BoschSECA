@@ -49,9 +49,11 @@ int main(void)
 		{
 			CAN_receive_message(CAN0, &ID, msg, &msg_size, &timestamp, &DLC);
 
+			//CAN_send_message(CAN0, ID + 1, msg, msg_size, DLC);
 
+			//while(!CAN_get_tx_status(CAN0));
 
-			CAN_send_message(CAN0, ID + 1, msg, msg_size, DLC);
+			//CAN_clear_tx_and_rx_flags(CAN0);
 		}
 	}
 
