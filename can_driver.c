@@ -64,7 +64,12 @@ void CAN_Init(CAN_Type* base, CAN_speed_t speed)
 		PCC->PCCn[PCC_FlexCAN1_INDEX] |= PCC_PCCn_CGC_MASK;
 	}
 
-	/** Disables the Clock*/
+	else if(CAN2 == base)
+	{
+		PCC->PCCn[PCC_FlexCAN2_INDEX] |= PCC_PCCn_CGC_MASK;
+	}
+
+	/** Disables the module*/
 	base->MCR |= CAN_MCR_MDIS_MASK;
 	/** Sets the clock source to the oscillator clock*/
 	//TODO: Funciona con peripheral clock?
@@ -114,8 +119,8 @@ void CAN_Init(CAN_Type* base, CAN_speed_t speed)
 
 void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_size)
 {
-	uint8_t counter = 0;
-	uint8_t DLC = 0;
+	uint8_t counter = INIT_VAL;
+	uint8_t DLC = INIT_VAL;
 
 	/** ID can only be of 11 bits*/
 	ID &= STD_ID_MASK;
@@ -135,7 +140,7 @@ void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_si
 	/** Sets the ID to the bits 28-18 (ID bits for standard format)*/
 	base->RAMn[1] = (ID << 16);
 
-	/** Sets the CAN command to transmitt*/
+	/** Sets the CAN command to transmit*/
 	base->RAMn[0] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
 }
 
