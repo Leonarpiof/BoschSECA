@@ -45,9 +45,9 @@ typedef enum
 
 void CAN_Init(CAN_Type* base, CAN_speed_t speed);
 
-void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_size);
+void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_size, uint8_t DLC);
 
-void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* msg_size, uint16_t* timestamp);
+void CAN_receive_message(CAN_Type* base, uint16_t* ID, uint32_t* msg, uint8_t* msg_size, uint16_t* timestamp, uint8_t* DLC);
 
 CAN_rx_status_t CAN_get_rx_status(CAN_Type* base);
 

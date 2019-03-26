@@ -10,6 +10,8 @@
 
 #define SBC_MC33903
 
+void WDOG_disable (void);
+
 void PORT_init (void);
 
 void LPSPI1_init_master(void);

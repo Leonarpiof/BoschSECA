@@ -4,6 +4,13 @@
 /** This module is taken from the driver example FlexCAN*/
 /********************************************************/
 
+void WDOG_disable (void)
+{
+	WDOG->CNT=0xD928C520; 	/* Unlock watchdog */
+	WDOG->TOVAL=0x0000FFFF;	/* Maximum timeout value */
+	WDOG->CS = 0x00002100;    /* Disable watchdog */
+}
+
 void PORT_init (void)
 {
 	PCC->PCCn[PCC_PORTE_INDEX] |= PCC_PCCn_CGC_MASK; /* Enable clock for PORTE */
