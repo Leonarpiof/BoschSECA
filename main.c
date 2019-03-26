@@ -19,10 +19,6 @@ int main(void)
 
 	CAN_Init(CAN0, speed_500kbps);
 
-	PORT_init();             /* Configure ports */
-	LPSPI1_init_master();    /* Initialize LPSPI1 for communication with MC33903 */
-	LPSPI1_init_MC33903();   /* Configure SBC via SPI for CAN transceiver operation */
-
 	while(1)
 	{
 		if(CAN_get_rx_status(CAN0))
