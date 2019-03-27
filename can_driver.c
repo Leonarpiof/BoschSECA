@@ -74,8 +74,12 @@
 /** Defines the shifts for the Rx MB interruption flag*/
 #define RX_MB_FLAG_SHIFT		(0x04)
 
+/** Disable CAN FS*/
 #define CAN_FD_DISABLE			(0x0000001F)
+/** Offset to calculate the msg_size from DLC*/
 #define MESSAGE_SIZE_OFF		(0x03)
+/** Delay for the Tx*/
+#define CAN_DELAY					(10000)
 
 /** Variable to store the code of the Rx MB*/
 static uint32_t RxCODE;
@@ -85,6 +89,9 @@ static uint32_t RxID;
 static uint32_t RxLENGTH;
 /** Variable to store the data of the Rx MB*/
 static uint32_t RxDATA[DATA_SIZE];
+
+/** This function delays the microprocesor*/
+static void Delay(uint32_t delay);
 
 /** This function initializes the CAN*/
 void CAN_Init(CAN_Type* base, uint32_t speed)
@@ -156,7 +163,7 @@ void CAN_Init(CAN_Type* base, uint32_t speed)
 void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_size, uint8_t DLC)
 {
 	/** Counter to set the message to the MB*/
-	uint8_t counter = INIT_VAL;
+	uint16_t counter = INIT_VAL;
 
 	/** Standard ID can only be of 11 bits*/
 	ID &= STD_ID_MASK;
@@ -177,11 +184,10 @@ void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_si
 	/** Sets the DLC and the CAN command to transmit*/
 	base->RAMn[(TX_BUFF_OFFSET * MSG_BUF_SIZE) + CODE_AND_DLC_POS] = (DLC << CAN_WMBn_CS_DLC_SHIFT) | TX_BUFF_TRANSMITT;
 
-	/** Waits for the CAN to finish the transmission*/
-	while(!CAN_get_tx_status(CAN0));
-
-	/** Clears the flags*/
-	CAN_clear_tx_and_rx_flags(CAN0);
+	/** Waits for the CAN to end the transmission*/
+	Delay(CAN_DELAY);
+	/** Clears the Rx MB flag*/
+	base->IFLAG1 = CLEAR_MB_4;
 }
 
 /** This function receives a message from CAN*/
@@ -233,4 +239,15 @@ CAN_tx_status_t CAN_get_tx_status(CAN_Type* base)
 void CAN_clear_tx_and_rx_flags(CAN_Type* base)
 {
 	base->IFLAG1 = CLEAR_ALL_FLAGS;
+}
+
+/** This function delays the microprocesor*/
+static void Delay(uint32_t delay)
+{
+	uint32_t counter = INIT_VAL;
+
+	for(counter = INIT_VAL ; counter < delay ; counter ++)
+	{
+
+	}
 }

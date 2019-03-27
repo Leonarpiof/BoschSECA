@@ -76,6 +76,7 @@ void CAN_send_message(CAN_Type* base, uint16_t ID, uint32_t* msg, uint8_t msg_si
  	 \brief This function reads a message received via CAN.
 
  	 \note First make sure the CAN has received a message using the function CAN_get_rx_status().
+ 	 \note This function erases the interruption flag of the Rx buffer.
 
  	 \param[in] base CAN module from which the message will be received.
  	 \param[out] ID ID of the message received.
